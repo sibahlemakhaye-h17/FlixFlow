@@ -1,0 +1,140 @@
+﻿@model FlixFlow.ViewModels.ProfileViewModel
+
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="container mt-5">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Profile Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-lg" style="background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 12px;">
+                <div class="card-body text-center p-4">
+                    <!-- Avatar -->
+                    <div class="mb-3">
+                        <div class="avatar-circle mx-auto">
+                            <i class="fas fa-user text-white" style="font-size: 3rem;"></i>
+                        </div>
+                    </div>
+
+                    <h3 class="text-white mb-1">@Model.FullName</h3>
+                    <p class="text-muted mb-3">
+                        <i class="fas fa-envelope me-1"></i>@Model.Email
+                    </p>
+
+                    @if (Model.IsPremium)
+                    {
+                        <span class="badge bg-warning text-dark mb-3">
+                            <i class="fas fa-crown me-1"></i>Premium Member
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary mb-3">
+                            <i class="fas fa-user me-1"></i>Free Member
+                        </span>
+                    }
+
+                    <hr style="border-color: #2a2a3e;" />
+
+                    <p class="text-muted small mb-3">
+                        <i class="fas fa-calendar me-1"></i>
+                        Member since @Model.CreatedAt.ToString("MMMM yyyy")
+                    </p>
+
+                    <a asp-action="EditProfile" class="btn btn-danger w-100">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="col-md-8">
+            <div class="card shadow-lg mb-4" style="background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 12px;">
+                <div class="card-body p-4">
+                    <h4 class="text-white mb-4">
+                        <i class="fas fa-chart-line text-danger me-2"></i>Your Activity
+                    </h4>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="stat-card text-center p-4 rounded" style="background: #0d0d1a;">
+                                <i class="fas fa-heart text-danger" style="font-size: 2rem;"></i>
+                                <h2 class="text-white mt-2 mb-0">@Model.WatchlistCount</h2>
+                                <p class="text-muted mb-0 small">In Watchlist</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card text-center p-4 rounded" style="background: #0d0d1a;">
+                                <i class="fas fa-star text-warning" style="font-size: 2rem;"></i>
+                                <h2 class="text-white mt-2 mb-0">@Model.FavoritesCount</h2>
+                                <p class="text-muted mb-0 small">Favorites</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card text-center p-4 rounded" style="background: #0d0d1a;">
+                                <i class="fas fa-star-half-alt text-info" style="font-size: 2rem;"></i>
+                                <h2 class="text-white mt-2 mb-0">@Model.RatingsCount</h2>
+                                <p class="text-muted mb-0 small">Ratings</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card shadow-lg" style="background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 12px;">
+                <div class="card-body p-4">
+                    <h4 class="text-white mb-3">
+                        <i class="fas fa-bolt text-danger me-2"></i>Quick Actions
+                    </h4>
+
+                    <div class="d-grid gap-2">
+                        <a asp-controller="Watchlist" asp-action="Index" class="btn btn-outline-danger text-start">
+                            <i class="fas fa-heart me-2"></i>View My Watchlist
+                            <span class="badge bg-danger float-end">@Model.WatchlistCount</span>
+                        </a>
+                        <a asp-controller="Movies" asp-action="Popular" class="btn btn-outline-danger text-start">
+                            <i class="fas fa-fire me-2"></i>Browse Popular Movies
+                        </a>
+                        <a asp-controller="Movies" asp-action="Index" class="btn btn-outline-danger text-start">
+                            <i class="fas fa-film me-2"></i>Browse All Movies
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .avatar-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e50914, #b20710);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);
+        }
+
+        .stat-card {
+            transition: transform 0.3s ease;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-5px);
+            }
+    </style>
+}

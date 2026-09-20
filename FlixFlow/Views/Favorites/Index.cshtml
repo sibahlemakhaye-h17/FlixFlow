@@ -1,0 +1,168 @@
+﻿@model List<FlixFlow.Models.Movie>
+
+@{
+    ViewData["Title"] = "My Favorites";
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="text-white mb-1">
+                <i class="fas fa-star text-warning me-2"></i>My Favorites
+            </h1>
+            <p class="text-muted mb-0">Your all-time favorite movies</p>
+        </div>
+        <span class="badge bg-warning text-dark fs-6 px-3 py-2">@Model.Count movies</span>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-star text-muted" style="font-size: 5rem; opacity: 0.3;"></i>
+            <h3 class="text-white mt-4">No favorites yet</h3>
+            <p class="text-muted">Mark movies as favorites to see them here!</p>
+            <a asp-controller="Movies" asp-action="Popular" class="btn btn-warning btn-lg mt-3 px-4">
+                <i class="fas fa-compass me-2"></i>Browse Movies
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-4">
+            @foreach (var movie in Model)
+            {
+                <div class="col" id="movie-@movie.TmdbId">
+                    <div class="movie-card position-relative">
+                        <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.TmdbId">
+                            <img src="@movie.PosterPath"
+                                 class="img-fluid rounded"
+                                 alt="@movie.Title"
+                                 loading="lazy"
+                                 onerror="this.src='https://via.placeholder.com/300x450/1a1a2e/e50914?text=No+Poster'">
+                            <div class="movie-overlay">
+                                <i class="fas fa-play-circle"></i>
+                            </div>
+                        </a>
+
+                        <button class="btn btn-warning btn-sm position-absolute top-0 end-0 m-2 remove-btn"
+                                data-tmdb-id="@movie.TmdbId"
+                                title="Remove from favorites">
+                            <i class="fas fa-times"></i>
+                        </button>
+
+                        <h6 class="text-white mt-2 text-truncate">@movie.Title</h6>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">@movie.ReleaseDate?.ToString("yyyy")</small>
+                            @if (movie.VoteAverage.HasValue)
+                            {
+                                <small class="text-warning">
+                                    <i class="fas fa-star"></i> @movie.VoteAverage?.ToString("0.0")
+                                </small>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.remove-btn').click(function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                var btn = $(this);
+                var tmdbId = btn.data('tmdb-id');
+                var card = $('#movie-' + tmdbId);
+
+                if (!confirm('Remove this movie from your favorites?')) return;
+
+                $.ajax({
+                    url: '/Favorites/Remove',
+                    type: 'POST',
+                    data: {
+                        tmdbId: tmdbId,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            card.fadeOut(300, function() {
+                                $(this).remove();
+                                var count = $('.movie-card').length;
+                                $('.badge').text(count + ' movies');
+                                if (count === 0) location.reload();
+                            });
+                        }
+                    },
+                    error: function() {
+                        alert('Error removing favorite. Please try again.');
+                    }
+                });
+            });
+        });
+    </script>
+    @Html.AntiForgeryToken()
+}
+
+@section Styles {
+    <style>
+        .movie-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+            .movie-card:hover {
+                transform: scale(1.05);
+                z-index: 1;
+            }
+
+            .movie-card img {
+                width: 100%;
+                height: 280px;
+                object-fit: cover;
+            }
+
+        .movie-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .movie-card:hover .movie-overlay {
+            opacity: 1;
+        }
+
+        .movie-overlay i {
+            font-size: 3rem;
+            color: #e50914;
+        }
+
+        .remove-btn {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            z-index: 10;
+        }
+
+        .movie-card:hover .remove-btn {
+            opacity: 1;
+        }
+    </style>
+}

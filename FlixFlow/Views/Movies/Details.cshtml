@@ -1,0 +1,368 @@
+﻿@model FlixFlow.Models.Movie
+
+@{
+    ViewData["Title"] = Model.Title;
+    var providers = ViewBag.WatchProviders as List<FlixFlow.ViewModels.WatchProviderInfo> ?? new();
+    var trailerKey = ViewBag.TrailerKey as string;
+    var avgRating = ViewBag.AverageRating as double?;
+    var ratingCount = ViewBag.RatingCount as int? ?? 0;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <img src="@Model.PosterPath" class="img-fluid rounded shadow" alt="@Model.Title"
+                 onerror="this.src='https://via.placeholder.com/300x450/1a1a2e/e50914?text=No+Poster'">
+        </div>
+        <div class="col-md-8">
+            <h1 class="display-4 text-white">@Model.Title</h1>
+            <p class="text-muted">
+                @Model.ReleaseDate?.ToString("MMMM dd, yyyy") · @Model.Runtime min · @Model.OriginalLanguage
+            </p>
+
+            @if (Model.VoteAverage.HasValue)
+            {
+                <div class="mb-3">
+                    <span class="badge bg-warning text-dark fs-5 p-2">
+                        ⭐ @Model.VoteAverage?.ToString("0.0") / 10
+                    </span>
+                </div>
+            }
+
+            <p class="lead text-white">@Model.Description</p>
+
+            <!-- Rating Section -->
+            <div class="card mb-4" style="background: #1a1a2e; border: 1px solid #2a2a3e;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-white mb-0">
+                            <i class="fas fa-star-half-alt text-warning me-2"></i>Community Rating
+                        </h5>
+                        <div id="communityRating">
+                            @if (avgRating.HasValue)
+                            {
+                                <span class="badge bg-warning text-dark fs-6">
+                                    <i class="fas fa-star"></i> @avgRating.Value.ToString("0.0") / 10
+                                </span>
+                                <small class="text-muted ms-2">(@ratingCount ratings)</small>
+                            }
+                            else
+                            {
+                                <small class="text-muted">No ratings yet</small>
+                            }
+                        </div>
+                    </div>
+
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <div id="userRatingSection">
+                            <label class="form-label text-white">Your Rating:</label>
+                            <div class="d-flex gap-1 flex-wrap" id="ratingStars">
+                                @for (int i = 1; i <= 10; i++)
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-warning rating-btn" data-score="@i">
+                                        @i
+                                    </button>
+                                }
+                            </div>
+                            <small class="text-muted d-block mt-2" id="ratingStatus">Click a number to rate</small>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">
+                            <a asp-controller="Account" asp-action="Login" class="text-danger">Login</a> to rate this movie
+                        </p>
+                    }
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-2 mt-4 flex-wrap">
+                @if (!string.IsNullOrEmpty(trailerKey))
+                {
+                    <button type="button" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#watchModal">
+                        <i class="fas fa-play-circle me-2"></i>Watch Trailer
+                    </button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-secondary btn-lg" disabled>
+                        <i class="fas fa-play-circle me-2"></i>No Trailer Available
+                    </button>
+                }
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <button id="watchlistBtn" class="btn btn-outline-danger btn-lg" data-tmdb-id="@Model.TmdbId">
+                        <i class="fas fa-heart me-2"></i><span id="watchlistText">Add to Watchlist</span>
+                    </button>
+
+                    <button id="favoriteBtn" class="btn btn-outline-warning btn-lg" data-tmdb-id="@Model.TmdbId">
+                        <i class="fas fa-star me-2"></i><span id="favoriteText">Add to Favorites</span>
+                    </button>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-outline-danger btn-lg">
+                        <i class="fas fa-heart me-2"></i>Login to Save
+                    </a>
+                }
+            </div>
+
+            <a asp-action="Index" class="btn btn-secondary mt-3">
+                ← Back to Movies
+            </a>
+        </div>
+    </div>
+
+    <!-- Watch Providers Section -->
+    @if (providers.Any())
+    {
+        <div class="mt-5">
+            <h3 class="text-white mb-4">
+                <i class="fas fa-tv text-danger me-2"></i>Where to Watch
+            </h3>
+
+            @foreach (var group in providers.GroupBy(p => p.Type))
+            {
+                <div class="mb-4">
+                    <h6 class="text-muted mb-3">
+                        @if (group.Key == "Stream")
+                        {
+                            <i class="fas fa-play-circle me-2"></i>
+                            <span>Streaming</span>
+                        }
+                        else if (group.Key == "Rent")
+                        {
+                            <i class="fas fa-dollar-sign me-2"></i>
+                            <span>Rent</span>
+                        }
+                        else
+                        {
+                            <i class="fas fa-shopping-cart me-2"></i>
+                            <span>Buy</span>
+                        }
+                    </h6>
+
+                    <div class="d-flex gap-3 flex-wrap">
+                        @foreach (var provider in group.OrderBy(p => p.DisplayPriority))
+                        {
+                            <div class="provider-card text-center">
+                                <img src="@provider.LogoUrl"
+                                     alt="@provider.ProviderName"
+                                     class="provider-logo mb-2"
+                                     title="@provider.ProviderName"
+                                     onerror="this.style.display='none'">
+                                <p class="text-white small mb-0">@provider.ProviderName</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <a href="https://www.justwatch.com/us/search?q=@Model.Title"
+               target="_blank"
+               class="btn btn-outline-info btn-sm mt-2">
+                <i class="fas fa-external-link-alt me-2"></i>See all options on JustWatch
+            </a>
+        </div>
+    }
+</div>
+
+<!-- Watch Trailer Modal -->
+@if (!string.IsNullOrEmpty(trailerKey))
+{
+    <div class="modal fade" id="watchModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="background: #1a1a2e; border: 1px solid #2a2a3e;">
+                <div class="modal-header" style="border-bottom: 1px solid #2a2a3e;">
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-play-circle text-danger me-2"></i>@Model.Title
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="ratio ratio-16x9">
+                        <iframe id="trailerFrame"
+                                src=""
+                                data-src="https://www.youtube.com/embed/@trailerKey?autoplay=1&rel=0"
+                                title="@Model.Title Trailer"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #2a2a3e;">
+                    <a href="https://www.youtube.com/watch?v=@trailerKey" target="_blank" class="btn btn-outline-danger btn-sm">
+                        <i class="fab fa-youtube me-1"></i>Open on YouTube
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // WATCHLIST
+            var wlBtn = $('#watchlistBtn');
+            if (wlBtn.length > 0) {
+                var wlId = wlBtn.data('tmdb-id');
+                var wlText = $('#watchlistText');
+
+                $.get('/Watchlist/Check', { tmdbId: wlId }, function(response) {
+                    if (response.inWatchlist) updateWatchlistBtn(true);
+                });
+
+                wlBtn.click(function() {
+                    var isIn = wlBtn.hasClass('in-watchlist');
+                    var url = isIn ? '/Watchlist/Remove' : '/Watchlist/Add';
+                    $.ajax({
+                        url: url, type: 'POST',
+                        data: { tmdbId: wlId, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+                        success: function(response) { if (response.success) updateWatchlistBtn(response.added); },
+                        error: function() { alert('Error. Please try again.'); }
+                    });
+                });
+
+                function updateWatchlistBtn(isIn) {
+                    if (isIn) {
+                        wlBtn.removeClass('btn-outline-danger').addClass('btn-danger in-watchlist');
+                        wlText.text('Remove from Watchlist');
+                        wlBtn.find('i').removeClass('fa-heart').addClass('fa-check');
+                    } else {
+                        wlBtn.removeClass('btn-danger in-watchlist').addClass('btn-outline-danger');
+                        wlText.text('Add to Watchlist');
+                        wlBtn.find('i').removeClass('fa-check').addClass('fa-heart');
+                    }
+                }
+            }
+
+            // FAVORITES
+            var favBtn = $('#favoriteBtn');
+            if (favBtn.length > 0) {
+                var favId = favBtn.data('tmdb-id');
+                var favText = $('#favoriteText');
+
+                $.get('/Favorites/Check', { tmdbId: favId }, function(response) {
+                    if (response.isFavorite) updateFavoriteBtn(true);
+                });
+
+                favBtn.click(function() {
+                    var isFav = favBtn.hasClass('in-favorites');
+                    var url = isFav ? '/Favorites/Remove' : '/Favorites/Add';
+                    $.ajax({
+                        url: url, type: 'POST',
+                        data: { tmdbId: favId, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+                        success: function(response) { if (response.success) updateFavoriteBtn(response.added); },
+                        error: function() { alert('Error. Please try again.'); }
+                    });
+                });
+
+                function updateFavoriteBtn(isFav) {
+                    if (isFav) {
+                        favBtn.removeClass('btn-outline-warning').addClass('btn-warning in-favorites');
+                        favText.text('Remove from Favorites');
+                        favBtn.find('i').removeClass('fa-star').addClass('fa-check');
+                    } else {
+                        favBtn.removeClass('btn-warning in-favorites').addClass('btn-outline-warning');
+                        favText.text('Add to Favorites');
+                        favBtn.find('i').removeClass('fa-check').addClass('fa-star');
+                    }
+                }
+            }
+
+            // RATINGS
+            var ratingBtns = $('.rating-btn');
+            if (ratingBtns.length > 0) {
+                var movieId = @Model.TmdbId;
+
+                $.get('/Ratings/GetUserRating', { tmdbId: movieId }, function(response) {
+                    if (response.score) {
+                        highlightRating(response.score);
+                        $('#ratingStatus').text('You rated this ' + response.score + '/10');
+                    }
+                });
+
+                ratingBtns.click(function() {
+                    var score = $(this).data('score');
+
+                    $.ajax({
+                        url: '/Ratings/Rate',
+                        type: 'POST',
+                        data: {
+                            tmdbId: movieId,
+                            score: score,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                highlightRating(score);
+                                $('#ratingStatus').text('You rated this ' + score + '/10 ✓');
+                                $('#communityRating').html(
+                                    '<span class="badge bg-warning text-dark fs-6">' +
+                                    '<i class="fas fa-star"></i> ' + response.average + ' / 10</span>' +
+                                    '<small class="text-muted ms-2">(' + response.count + ' ratings)</small>'
+                                );
+                            } else {
+                                alert(response.message);
+                            }
+                        },
+                        error: function() { alert('Error saving rating.'); }
+                    });
+                });
+
+                function highlightRating(score) {
+                    ratingBtns.each(function() {
+                        var s = $(this).data('score');
+                        if (s <= score) {
+                            $(this).removeClass('btn-outline-warning').addClass('btn-warning');
+                        } else {
+                            $(this).removeClass('btn-warning').addClass('btn-outline-warning');
+                        }
+                    });
+                }
+            }
+
+            // WATCH TRAILER MODAL
+            var watchModal = document.getElementById('watchModal');
+            if (watchModal) {
+                watchModal.addEventListener('show.bs.modal', function() {
+                    var iframe = document.getElementById('trailerFrame');
+                    if (iframe && !iframe.src) iframe.src = iframe.dataset.src;
+                });
+                watchModal.addEventListener('hidden.bs.modal', function() {
+                    var iframe = document.getElementById('trailerFrame');
+                    if (iframe) iframe.src = '';
+                });
+            }
+        });
+    </script>
+    @Html.AntiForgeryToken()
+}
+
+@section Styles {
+    <style>
+        .provider-card {
+            width: 100px;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+            .provider-card:hover {
+                transform: translateY(-5px);
+            }
+
+        .provider-logo {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: #0d0d1a;
+            padding: 4px;
+            border: 1px solid #2a2a3e;
+        }
+    </style>
+}

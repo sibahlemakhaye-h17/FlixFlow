@@ -1,0 +1,117 @@
+﻿@{
+    ViewData["Title"] = "FlixFlow - Your Cinematic Treasure Chest";
+}
+
+<div class="container-fluid px-0">
+    <!-- Hero Section -->
+    <div class="hero-section text-center text-white py-5" style="background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 50%, #0d0d1a 100%); border-bottom: 2px solid #e50914;">
+        <div class="container">
+            <h1 class="display-1 fw-bold" style="color: #e50914;">
+                <i class="fas fa-film me-3"></i>FlixFlow
+            </h1>
+            <p class="lead fs-2 text-light">Your cinematic treasure chest</p>
+            <p class="text-muted">Discover, watch, and track your favorite movies and series</p>
+            <a asp-controller="Movies" asp-action="Popular" class="btn btn-danger btn-lg mt-3 px-5">
+                <i class="fas fa-play me-2"></i>Start Watching
+            </a>
+        </div>
+    </div>
+
+    <!-- Trending Section -->
+    <div class="container mt-5">
+        <h2 class="text-white mb-4">
+            <i class="fas fa-fire text-danger me-2"></i>Trending Now
+        </h2>
+        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
+            @foreach (var movie in ViewBag.Trending)
+            {
+                <div class="col">
+                    <div class="movie-card">
+                        <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.TmdbId">
+                            <img src="@movie.PosterPath" class="img-fluid rounded" alt="@movie.Title" loading="lazy">
+                            <div class="movie-overlay">
+                                <i class="fas fa-play-circle"></i>
+                            </div>
+                        </a>
+                        <h6 class="text-white mt-2 text-truncate">@movie.Title</h6>
+                        <small class="text-muted">@movie.ReleaseDate?.ToString("yyyy")</small>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Upcoming Section -->
+    <div class="container mt-5 pb-5">
+        <h2 class="text-white mb-4">
+            <i class="fas fa-calendar-alt text-info me-2"></i>Coming Soon
+        </h2>
+        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
+            @foreach (var movie in ViewBag.Upcoming)
+            {
+                <div class="col">
+                    <div class="movie-card">
+                        <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.TmdbId">
+                            <img src="@movie.PosterPath" class="img-fluid rounded" alt="@movie.Title" loading="lazy">
+                            <div class="movie-overlay">
+                                <i class="fas fa-play-circle"></i>
+                            </div>
+                        </a>
+                        <h6 class="text-white mt-2 text-truncate">@movie.Title</h6>
+                        <small class="text-muted">@movie.ReleaseDate?.ToString("yyyy")</small>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .movie-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+            .movie-card:hover {
+                transform: scale(1.05);
+                z-index: 1;
+            }
+
+            .movie-card img {
+                width: 100%;
+                height: 280px;
+                object-fit: cover;
+            }
+
+        .movie-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .movie-card:hover .movie-overlay {
+            opacity: 1;
+        }
+
+        .movie-overlay i {
+            font-size: 3rem;
+            color: #e50914;
+        }
+
+        .hero-section {
+            margin-top: -20px;
+        }
+    </style>
+}

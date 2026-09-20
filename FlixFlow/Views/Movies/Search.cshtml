@@ -1,0 +1,103 @@
+﻿@model List<FlixFlow.Models.Movie>
+
+@{
+    ViewData["Title"] = "Search Results";
+    var query = ViewBag.SearchQuery as string ?? "";
+}
+
+<div class="container mt-5">
+    <h1 class="text-white mb-2">
+        <i class="fas fa-search text-danger me-2"></i>Search Results
+    </h1>
+    <p class="text-muted mb-4">
+        Results for: <strong class="text-white">"@query"</strong>
+        <span class="badge bg-danger ms-2">@Model.Count found</span>
+    </p>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-search text-muted" style="font-size: 5rem; opacity: 0.3;"></i>
+            <h3 class="text-white mt-4">No results found</h3>
+            <p class="text-muted">Try searching for a different movie title.</p>
+            <a asp-action="Popular" class="btn btn-danger mt-3">
+                <i class="fas fa-fire me-2"></i>Browse Popular
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-4">
+            @foreach (var movie in Model)
+            {
+                <div class="col">
+                    <div class="movie-card position-relative">
+                        <a asp-action="Details" asp-route-id="@movie.TmdbId">
+                            <img src="@movie.PosterPath" class="img-fluid rounded" alt="@movie.Title" loading="lazy"
+                                 onerror="this.src='https://via.placeholder.com/300x450/1a1a2e/e50914?text=No+Poster'">
+                            <div class="movie-overlay">
+                                <i class="fas fa-play-circle"></i>
+                            </div>
+                        </a>
+                        <h6 class="text-white mt-2 text-truncate">@movie.Title</h6>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">@movie.ReleaseDate?.ToString("yyyy")</small>
+                            @if (movie.VoteAverage.HasValue)
+                            {
+                                <small class="text-warning">
+                                    <i class="fas fa-star"></i> @movie.VoteAverage?.ToString("0.0")
+                                </small>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .movie-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+            .movie-card:hover {
+                transform: scale(1.05);
+                z-index: 1;
+            }
+
+            .movie-card img {
+                width: 100%;
+                height: 280px;
+                object-fit: cover;
+            }
+
+        .movie-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .movie-card:hover .movie-overlay {
+            opacity: 1;
+        }
+
+        .movie-overlay i {
+            font-size: 3rem;
+            color: #e50914;
+        }
+    </style>
+}
